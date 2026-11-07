@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeuHeuLogin Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #F6E3FC;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .vault-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 56.25vw;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      background: url('back.png') no-repeat center center;
+      background-size: contain;
+    }
+
+    .fake-input-container {
+      position: absolute;
+      top: 37.5%;
+      left: 26.5%;
+      width: 48.5%;
+      height: 12.5%;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 5;
+    }
+    .fake-input {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ff8da1;
+      font-size: 42px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      padding-left: 15px;
+      caret-color: transparent;
+      transition: color 0.2s ease;
+    }
+
+    .fake-input.error {
+      color: #ff4d4d;
+      font-size: 26px;
+      letter-spacing: 2px;
+      animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .reset-btn {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 28px;
+      background-color: #ffffff;
+      border: 2px solid #ff8da1;
+      border-radius: 50%;
+      color: #ff8da1;
+      font-size: 14px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.15s ease;
+    }
+    .reset-btn:hover {
+      background-color: #fff2f5;
+      transform: translateX(-50%) scale(1.1);
+    }
+    .reset-btn:active {
+      transform: translateX(-50%) scale(0.95);
+    }
+    
+    .pet {
+      position: absolute;
+      cursor: pointer;
+      height: auto;
+      z-index: 10;
+      -webkit-user-drag: none;
+    }
+
+    .pet-bear    { width: 20%; top: 18%; left: 3%; }       
+    .pet-fox     { width: 21%; top: 53%; left: 10%; }        
+    .pet-penguin { width: 24%; top: 55%; left: 38%; }     
+    .pet-dog     { width: 21%; top: 52%; right: 15%; z-index: 10; } 
+    .pet-cat     { width: 20%; top: 20%; right: 3%;  z-index: 11; } 
+
+    .secret-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fcf4ff;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      padding: 40px;
+      text-align: center;
+      color: #6a407e;
+    }
+    .secret-content.active {
+      display: flex;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="vault-wrapper">
+    <div class="fake-input-container">
+      <input type="text" class="fake-input" id="fakeInput" placeholder="" readonly>
+    </div>
+
+    <button class="reset-btn" onclick="resetVault()" title="重置">↺</button>
+
+    <img src="beom.png" class="pet pet-bear" onclick="pressPet('bear')" alt="熊">
+    <img src="heu.png" class="pet pet-penguin" onclick="pressPet('penguin')" alt="企鹅">
+    <img src="tae.png" class="pet pet-cat" onclick="pressPet('cat')" alt="猫">
+    <img src="soo.png" class="pet pet-dog" onclick="pressPet('dog')" alt="狗">
+    <img src="yeon.png" class="pet pet-fox" onclick="pressPet('fox')" alt="狐狸">
+
+    <div class="secret-content" id="secretBox">
+      <h2>Lets go</h2>
+      <p style="margin-top: 15px; font-size: 18px;">My Money Library</p>
+    </div>
+  </div>
+
+  <script>
+    const fakeInput = document.getElementById('fakeInput');
+    const HEART_SYMBOL = '❤';
+
+    // 正确的 13 次点击暗号顺序
+    const targetSequence = [
+      'penguin', 'penguin', 'penguin',
+      'dog', 'dog', 'dog',
+      'fox', 'fox', 'fox',
+      'bear', 'bear',
+      'cat', 'cat'
+    ];
+    let currentSequence = [];
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        triggerFailure();
+      } else if (e.key === 'Escape') {
+        resetVault();
+      } else if (e.key === 'Backspace') {
+        if (fakeInput.value.length > 0 && !fakeInput.classList.contains('error')) {
+          fakeInput.value = fakeInput.value.slice(0, -1);
+          currentSequence.pop();
+        }
+      }
+    });
+
+    function pressPet(petName) {
+      if (fakeInput.classList.contains('error')) return;
+
+      currentSequence.push(petName);
+      fakeInput.value += HEART_SYMBOL;
+
+      // 实时逐个比对当前已按下的顺序是否正确
+      for (let i = 0; i < currentSequence.length; i++) {
+        if (currentSequence[i] !== targetSequence[i]) {
+          triggerFailure();
+          return;
+        }
+      }
+
+      // 如果全部 13 个全部按对，则成功解锁
+      if (currentSequence.length === targetSequence.length) {
+        window.location.href = "https://app.notion.com/p/MyMoneyWe-41164b49b22c8007a4fdf7343bf4ce4c";
+      }
+    }
+
+    function triggerFailure() {
+      currentSequence = [];
+      fakeInput.value = "PASSWORD FAILED!";
+      fakeInput.classList.add('error');
+      
+      setTimeout(() => {
+        resetVault();
+      }, 1000);
+    }
+
+    function resetVault() {
+      currentSequence = [];
+      fakeInput.value = "";
+      fakeInput.classList.remove('error');
+    }
+  </script>
+
+</body>
+</html>
